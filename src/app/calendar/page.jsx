@@ -12,7 +12,7 @@ import { Modal, Box, TextField, Button, Typography, List, ListItem, ListItemText
 import SideDrawer from "../_components/SideDrawer";
 import { useState } from 'react';
 
-export default function page() {
+export default function CalendarPage() {
 
     const [selectedDate, setSelectedDate] = useState(null);
     const [events, setEvents] = useState({});
