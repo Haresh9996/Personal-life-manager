@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
 import AppBar from '@mui/material/AppBar';
 import Box from '@mui/material/Box';
@@ -23,7 +23,6 @@ import { blueGrey } from '@mui/material/colors';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 
 const drawerWidth = 240;
-
 function SideDrawer(props) {
     const { window } = props;
     const { children } = props;
@@ -31,9 +30,21 @@ function SideDrawer(props) {
     const [isClosing, setIsClosing] = useState(false);
     const [anchorEl, setAnchorEl] = useState(null);
     const [profileMenuAnchorEl, setProfileMenuAnchorEl] = useState(null);
+    const [user, setUser] = useState(null);
 
     const pathName = usePathname();
     const router = useRouter();
+
+    useEffect(() => {
+        const storedUser = JSON.parse(localStorage.getItem("plmUser"));
+        setUser(storedUser);
+
+        if (!storedUser && pathName !== '/') {
+            router.push('/');
+        } else if (storedUser && pathName === '/') {
+            router.push('/dashboard');
+        }
+    }, [pathName, router]);
 
     const handleDrawerClose = () => {
         setIsClosing(true);
@@ -66,6 +77,10 @@ function SideDrawer(props) {
         setProfileMenuAnchorEl(null);
     };
 
+    const handleLogout = () => {
+        localStorage.removeItem("plmUser")
+        router.push("/")
+    }
 
     const getBreadcrumbText = (path) => {
         switch (path) {
@@ -101,7 +116,7 @@ function SideDrawer(props) {
                         <ListItemIcon>
                             <Avatar></Avatar>
                         </ListItemIcon>
-                        <ListItemText primary={"Profile"} />
+                        <ListItemText className='font-bold' primary={user ? user?.firstName.toUpperCase() : "Profile"} />
                     </ListItemButton>
                 </ListItem>
             </List>
@@ -197,7 +212,7 @@ function SideDrawer(props) {
                         onClose={handleProfileMenuClose}
                     >
                         <MenuItem onClick={handleProfileMenuClose}>Profile</MenuItem>
-                        <MenuItem onClick={handleProfileMenuClose}>Logout</MenuItem>
+                        <MenuItem onClick={handleLogout}>Logout</MenuItem>
                     </Menu>
                 </Toolbar>
             </AppBar>

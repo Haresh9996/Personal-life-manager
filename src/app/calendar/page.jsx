@@ -5,19 +5,50 @@ import { DemoContainer } from '@mui/x-date-pickers/internals/demo';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { DateCalendar } from '@mui/x-date-pickers/DateCalendar';
-
 import { Modal, Box, TextField, Button, Typography, List, ListItem, ListItemText, Paper, Divider } from '@mui/material';
 
-
 import SideDrawer from "../_components/SideDrawer";
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { BASE_URL } from '../utils/connection';
 
 export default function CalendarPage() {
-
     const [selectedDate, setSelectedDate] = useState(null);
     const [events, setEvents] = useState({});
     const [newEvent, setNewEvent] = useState('');
     const [open, setOpen] = useState(false);
+
+    useEffect(() => {
+        const fetchUserEvents = async () => {
+            const user = JSON.parse(localStorage.getItem('plmUser'));
+            if (!user || !user._id) {
+                console.error('User not found in localStorage');
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/users/calendar?userId=${user._id}`);
+                const data = await response.json();
+                if (data.success) {
+                    // Group events by date
+                    const eventsByDate = data.message.reduce((acc, event) => {
+                        const dateKey = event.date;
+                        if (!acc[dateKey]) {
+                            acc[dateKey] = [];
+                        }
+                        acc[dateKey].push(...event.events);
+                        return acc;
+                    }, {});
+                    setEvents(eventsByDate);
+                } else {
+                    console.error('Failed to fetch events:', data.message);
+                }
+            } catch (error) {
+                console.error('Error fetching events:', error);
+            }
+        };
+
+        fetchUserEvents();
+    }, []);
 
     const handleDateClick = (date) => {
         if (!selectedDate || !date.isSame(selectedDate, 'day')) {
@@ -41,24 +72,48 @@ export default function CalendarPage() {
         }
     };
 
+    const handleSubmitEvents = async () => {
+        const user = JSON.parse(localStorage.getItem('plmUser'));
+        if (!user || !user._id) {
+            console.error('User not found in localStorage');
+            return;
+        }
+
+        const payload = Object.keys(events).flatMap(date =>
+            events[date].map(event => ({
+                title: event,
+                date: date,
+                userId: user._id
+            }))
+        );
+
+        try {
+            const response = await fetch('/api/users/calendar', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(payload)
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                console.log('Events added successfully:', data.message);
+            } else {
+                console.error('Failed to add events:', data.message);
+            }
+        } catch (error) {
+            console.error('Error:', error);
+        }
+    };
+
     return (
         <>
             <SideDrawer>
-                {/* <>
-                    <LocalizationProvider dateAdapter={AdapterDayjs}>
-                        <DemoContainer components={['DateCalendar']} >
-                            <DateCalendar views={['year', 'month', 'day']} />
-                        </DemoContainer>
-                    </LocalizationProvider>
-
-                    <LocalizationProvider dateAdapter={AdapterDayjs}>
-                        <DateCalendar />
-                    </LocalizationProvider>
-                </> */}
-
-                <h2>from gpt</h2>
+                <h2>Calendar</h2>
                 <LocalizationProvider dateAdapter={AdapterDayjs}>
-                    <Box sx={{ display: 'flex', flexDirection: 'row', gap: 2 }}>
+                    <Box sx={{ display: 'flex', flexWrap: 'wrap', flexDirection: 'row', gap: 2 }}>
                         <Paper sx={{ p: 2, flex: 1 }}>
                             <DateCalendar
                                 value={selectedDate}
@@ -95,12 +150,16 @@ export default function CalendarPage() {
                             fullWidth
                             margin="normal"
                         />
-                        <Button variant="contained" color="primary" onClick={handleAddEvent}>
+                        <Button variant="contained" onClick={handleAddEvent}>
                             Add Event
                         </Button>
                     </Box>
                 </Modal>
+
+                <Button variant="contained" onClick={handleSubmitEvents} sx={{ mt: 2 }}>
+                    Submit All Events
+                </Button>
             </SideDrawer>
         </>
-    )
+    );
 };

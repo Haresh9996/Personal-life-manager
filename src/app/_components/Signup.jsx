@@ -1,69 +1,232 @@
-import { useRouter } from "next/navigation"
-import { useState } from "react"
+
+import { useState } from "react";
+import { Avatar, Box, Button, Container, CssBaseline, Grid, TextField, Typography, MenuItem, InputAdornment, IconButton } from "@mui/material";
+import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
+import { Visibility, VisibilityOff } from '@mui/icons-material';
+import { BASE_URL } from "../utils/connection";
+import { Toaster, toast } from "sonner";
+import { useRouter } from "next/navigation";
 
 export default function Signup() {
-    const [email, setEmail] = useState("")
-    const [name, setName] = useState("")
-    const [address, setAddress] = useState("")
-    const [city, setCity] = useState("")
-    const [number, setNumber] = useState("")
-    const [password, setPassword] = useState("")
-    const [cpassword, setCPassword] = useState("")
-    const router = useRouter()
+    const [email, setEmail] = useState("");
+    const [firstName, setFirstName] = useState("");
+    const [lastName, setLastName] = useState("");
+    const [dob, setDob] = useState("");
+    const [gender, setGender] = useState("");
+    const [occupation, setOccupation] = useState("");
+    const [password, setPassword] = useState("");
+    const [cpassword, setCPassword] = useState("");
+    const [showPassword, setShowPassword] = useState(false);
+    const [showCPassword, setShowCPassword] = useState(false);
+    const router = useRouter();
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        // console.log(email, firstName, lastName, dob, gender, occupation, password);
+        if (!validateForm) {
+            return
+        }
+
+        const response = await fetch(BASE_URL + "/api/users", {
+            method: "POST",
+            body: JSON.stringify({email, firstName, lastName, dob, gender, occupation, password})
+        })
+        if(response.ok){
+            const request = await response.json()
+            toast.success("Signup Successful!")
+            const { message } = request;
+            delete message.password;
+            localStorage.setItem("plmUser", JSON.stringify(message))
+            router.push("/dashboard")
+
+        } else {
+            toast.error("login faild!")
+        }
+    }
+
+    const handleClickShowPassword = () => {
+        setShowPassword(!showPassword);
+    };
+
+    const handleClickShowCPassword = () => {
+        setShowCPassword(!showCPassword);
+    };
+
+    const validateForm = () => {
+        if (!email.trim() || !/\S+@\S+\.\S+/.test(email)) {
+            alert("Please enter a valid email address");
+            return false;
+        }
+        if (!password.trim() || password.length < 6) {
+            alert("Password must be at least 6 characters long");
+            return false;
+        }
+
+        if (password !== cpassword) {
+            alert("Passwords do not match");
+            return false;
+        }
+        if (!firstName || !lastName || !dob || !gender || occupation) {
+            alert("Please fill all the blanks")
+            return false;
+        }
+
+        return true;
+    };
 
     return (
-        <>
-            <h1 className="text-xl font-bold leading-tight tracking-tight text-gray-900 md:text-2xl dark:text-white">
-                Create an account
-            </h1>
-            <form className="space-y-4 md:space-y-6" action="#">
-                <div className="flex space-x-4">
-                    <div>
-                        <label htmlFor="email" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Your email</label>
-                        <input type="email" name="email" id="email" className="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" placeholder="name@company.com" required=""
-                            value={email} onChange={(e) => setEmail(e.target.value)} />
-                    </div>
-                    <div>
-                        <label htmlFor="name" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Restaurant name</label>
-                        <input type="text" name="name" id="name" className="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" placeholder="Restaurant name " required=""
-                            value={name} onChange={(e) => setName(e.target.value.toUpperCase())} />
-                    </div>
-                </div>
-
-                <div>
-                    <label htmlFor="address" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Your address</label>
-                    <input type="text" name="address" id="address" className="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" placeholder="Address" required=""
-                        value={address} onChange={(e) => setAddress(e.target.value.toLowerCase())} />
-                </div>
-                <div className="flex space-x-4">
-                    <div>
-                        <label htmlFor="city" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Your city</label>
-                        <input type="text" name="city" id="city" className="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" placeholder="City Name" required=""
-                            value={city} onChange={(e) => setCity(e.target.value.toLowerCase())} />
-                    </div>
-                    <div>
-                        <label htmlFor="phone" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Your Mo. No.</label>
-                        <input type="number" name="number" id="number" className="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" placeholder="Mobile number" required=""
-                            value={number} onChange={(e) => setNumber(e.target.value)} />
-                    </div>
-                </div>
-                <div className="flex space-x-4">
-                    <div>
-                        <label htmlFor="password" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Password</label>
-                        <input type="password" name="password" id="password" placeholder="••••••••" className="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" autoComplete="true" required=""
-                            value={password} onChange={(e) => setPassword(e.target.value)} />
-                    </div>
-                    <div>
-                        <label htmlFor="confirm-password" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Confirm password</label>
-                        <input type="password" name="confirm-password" id="confirm-password" placeholder="••••••••" className="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" autoComplete="true" required=""
-                            value={cpassword} onChange={(e) => setCPassword(e.target.value)} />
-                    </div>
-                </div>
-
-                <button type="submit" className="w-full text-white bg-primary-600 hover:bg-primary-700 focus:ring-4 focus:outline-none focus:ring-primary-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800" onClick={()=>router.push("/dashboard")} >Create an account</button>
-
-            </form>
-
-        </>
-    )
-};
+        <Container component="main" maxWidth="xs">
+            <CssBaseline />
+            <Box sx={{ marginTop: 4, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                <Avatar sx={{ m: 1, bgcolor: 'secondary.main' }}>
+                    <LockOutlinedIcon />
+                </Avatar>
+                <Typography component="h1" variant="h5">
+                    Create an account
+                </Typography>
+                <Box component="form" onSubmit={handleSubmit} noValidate sx={{ mt: 3 }}>
+                    <Grid container spacing={2}>
+                        <Grid item xs={12} sm={6}>
+                            <TextField
+                                autoComplete="given-name"
+                                name="firstName"
+                                required
+                                fullWidth
+                                id="firstName"
+                                label="First Name"
+                                autoFocus
+                                value={firstName}
+                                onChange={(e) => setFirstName(e.target.value)}
+                            />
+                        </Grid>
+                        <Grid item xs={12} sm={6}>
+                            <TextField
+                                required
+                                fullWidth
+                                id="lastName"
+                                label="Last Name"
+                                name="lastName"
+                                autoComplete="family-name"
+                                value={lastName}
+                                onChange={(e) => setLastName(e.target.value)}
+                            />
+                        </Grid>
+                        <Grid item xs={12}>
+                            <TextField
+                                required
+                                fullWidth
+                                id="email"
+                                label="Email Address"
+                                name="email"
+                                autoComplete="email"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                            />
+                        </Grid>
+                        <Grid item sm={6} xs={12}>
+                            <TextField
+                                required
+                                fullWidth
+                                id="dob"
+                                label="Date of Birth"
+                                name="dob"
+                                type="date"
+                                InputLabelProps={{ shrink: true }}
+                                value={dob}
+                                onChange={(e) => setDob(e.target.value)}
+                            />
+                        </Grid>
+                        <Grid item sm={6} xs={12} >
+                            <TextField
+                                required
+                                fullWidth
+                                id="gender"
+                                select
+                                label="Gender"
+                                name="gender"
+                                value={gender}
+                                onChange={(e) => setGender(e.target.value)}
+                            >
+                                <MenuItem value="male">Male</MenuItem>
+                                <MenuItem value="female">Female</MenuItem>
+                                <MenuItem value="other">Other</MenuItem>
+                            </TextField>
+                        </Grid>
+                        <Grid item xs={12}>
+                            <TextField
+                                required
+                                fullWidth
+                                id="occupation"
+                                label="Occupation"
+                                name="occupation"
+                                autoComplete="occupation"
+                                value={occupation}
+                                onChange={(e) => setOccupation(e.target.value)}
+                            />
+                        </Grid>
+                        <Grid item xs={12}>
+                            <TextField
+                                required
+                                fullWidth
+                                name="password"
+                                label="Password"
+                                type={showPassword ? "text" : "password"}
+                                id="password"
+                                autoComplete="new-password"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                InputProps={{
+                                    endAdornment: (
+                                        <InputAdornment position="end">
+                                            <IconButton
+                                                aria-label="toggle password visibility"
+                                                onClick={handleClickShowPassword}
+                                                edge="end"
+                                            >
+                                                {showPassword ? <VisibilityOff /> : <Visibility />}
+                                            </IconButton>
+                                        </InputAdornment>
+                                    )
+                                }}
+                            />
+                        </Grid>
+                        <Grid item xs={12}>
+                            <TextField
+                                required
+                                fullWidth
+                                name="confirm-password"
+                                label="Confirm Password"
+                                type={showCPassword ? "text" : "password"}
+                                id="confirm-password"
+                                value={cpassword}
+                                onChange={(e) => setCPassword(e.target.value)}
+                                InputProps={{
+                                    endAdornment: (
+                                        <InputAdornment position="end">
+                                            <IconButton
+                                                aria-label="toggle password visibility"
+                                                onClick={handleClickShowCPassword}
+                                                edge="end"
+                                            >
+                                                {showCPassword ? <VisibilityOff /> : <Visibility />}
+                                            </IconButton>
+                                        </InputAdornment>
+                                    )
+                                }}
+                            />
+                        </Grid>
+                    </Grid>
+                    <Button
+                        type="submit"
+                        fullWidth
+                        variant="contained"
+                        sx={{ mt: 3, mb: 2 }}
+                    >
+                        Create an account
+                    </Button>
+                </Box>
+            </Box>
+            <Toaster position="top-right" richColors />
+        </Container>
+    );
+}
