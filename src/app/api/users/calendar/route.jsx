@@ -11,7 +11,7 @@ export async function GET(request) {
         if (!userId) {
             return NextResponse.json({ message: "User ID is required", success: false });
         }
-
+        
         await mongoose.connect(database);
         const events = await eventSchema.find({ userId });
 
