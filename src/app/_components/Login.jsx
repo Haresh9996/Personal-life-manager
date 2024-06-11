@@ -24,11 +24,11 @@ export default function Login() {
         })
         if (response.ok) {
             const request = await response.json()
-            toast.success("Login Successful!")
             const { message } = request;
             delete message.password;
             localStorage.setItem("plmUser", JSON.stringify(message))
             router.push("/dashboard")
+            toast.success("Login Successful!")
             
         } else {
             toast.error("login faild!")

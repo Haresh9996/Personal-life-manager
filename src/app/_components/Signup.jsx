@@ -22,7 +22,7 @@ export default function Signup() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        // console.log(email, firstName, lastName, dob, gender, occupation, password);
+
         if (!validateForm) {
             return
         }
@@ -33,11 +33,11 @@ export default function Signup() {
         })
         if(response.ok){
             const request = await response.json()
-            toast.success("Signup Successful!")
             const { message } = request;
             delete message.password;
             localStorage.setItem("plmUser", JSON.stringify(message))
             router.push("/dashboard")
+            toast.success("Signup Successful!")
 
         } else {
             toast.error("login faild!")
@@ -206,8 +206,7 @@ export default function Signup() {
                                             <IconButton
                                                 aria-label="toggle password visibility"
                                                 onClick={handleClickShowCPassword}
-                                                edge="end"
-                                            >
+                                                edge="end" >
                                                 {showCPassword ? <VisibilityOff /> : <Visibility />}
                                             </IconButton>
                                         </InputAdornment>

@@ -10,6 +10,7 @@ import { Modal, Box, TextField, Button, Typography, List, ListItem, ListItemText
 import SideDrawer from "../_components/SideDrawer";
 import { useEffect, useState } from 'react';
 import { BASE_URL } from '../utils/connection';
+import { Toaster, toast } from 'sonner';
 
 export default function CalendarPage() {
     const [selectedDate, setSelectedDate] = useState(null);
@@ -21,7 +22,7 @@ export default function CalendarPage() {
         const fetchUserEvents = async () => {
             const user = JSON.parse(localStorage.getItem('plmUser'));
             if (!user || !user._id) {
-                console.error('User not found in localStorage');
+                console.error('User not found!');
                 return;
             }
 
@@ -81,7 +82,7 @@ export default function CalendarPage() {
 
         const payload = Object.keys(events).flatMap(date =>
             events[date].map(event => ({
-                title: event,
+                events: event,
                 date: date,
                 userId: user._id
             }))
@@ -100,6 +101,7 @@ export default function CalendarPage() {
 
             if (data.success) {
                 console.log('Events added successfully:', data.message);
+                toast.success('Events added successfully:', data.message)
             } else {
                 console.error('Failed to add events:', data.message);
             }
@@ -160,6 +162,7 @@ export default function CalendarPage() {
                     Submit All Events
                 </Button>
             </SideDrawer>
+            <Toaster richColors position='top-right' />
         </>
     );
 };
