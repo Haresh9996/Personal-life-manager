@@ -1,10 +1,15 @@
 "use client"
-import React, { useState } from 'react';
-import { Box, Button, Card, CardContent, CardHeader, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Paper, Stack, TextField, ThemeProvider, Typography, createTheme } from '@mui/material';
+import React, { useEffect, useState } from 'react';
+import axios from 'axios';
+import { Avatar, Box, Button, Card, CardContent, CardHeader, Chip, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Divider, List, ListItem, ListItemAvatar, ListItemIcon, ListItemText, Paper, Stack, TextField, ThemeProvider, Typography, createTheme } from '@mui/material';
 import SideDrawer from '../_components/SideDrawer';
 import { PieChart } from '@mui/x-charts';
+import MovieFilterIcon from '@mui/icons-material/MovieFilter';
+import RestaurantMenuIcon from '@mui/icons-material/RestaurantMenu';
+import FlightIcon from '@mui/icons-material/Flight';
+import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
+import { Toaster, toast } from 'sonner';
 
-// Define your custom dark theme
 const theme = createTheme({
     palette: {
         mode: 'light',
@@ -25,16 +30,23 @@ const theme = createTheme({
         MuiButton: {
             styleOverrides: {
                 containedPrimary: {
-                    backgroundColor: '#111827', // Change primary contained button color
+                    backgroundColor: '#111827',
                 },
                 outlinedPrimary: {
-                    color: '#111827', // Change primary outlined button text color
-                    borderColor: '#111827', // Change primary outlined button border color
+                    color: '#111827',
+                    borderColor: '#111827',
                 },
             },
         },
     },
 });
+
+const categoryIcons = {
+    'Food': <RestaurantMenuIcon />,
+    'Entertainment': <MovieFilterIcon />,
+    'Traveling': <FlightIcon />,
+    'Others': <MoreHorizIcon />
+};
 
 const ExpenseTracker = () => {
     const [walletBalance, setWalletBalance] = useState(0);
@@ -49,13 +61,54 @@ const ExpenseTracker = () => {
         { id: 2, value: 0, label: 'Traveling' },
         { id: 3, value: 0, label: 'Others' },
     ]);
+
     const [expenseList, setExpenseList] = useState([]);
-    const [totalexpense, setTotalexpense] = useState('')
+    const [totalexpense, setTotalexpense] = useState('');
+    const [loggedinUser, setLoggedinUser] = useState({});
+
+    useEffect(() => {
+        const user = JSON.parse(localStorage.getItem("plmUser"));
+        if (user && user._id) {
+            setLoggedinUser(user);
+            fetchExpenses(user._id);
+        }
+    }, []);
+
+    const fetchExpenses = async (userId) => {
+        try {
+            const response = await axios.get(`/api/users/financetracker/${userId}`);
+            const expenses = response?.data?.data;
+            let totalExpenses = 0;
+            const updatedSeriesData = seriesData.map((item) => {
+                const totalForCategory = expenses
+                    .filter(expense => expense.category === item.label)
+                    .reduce((sum, expense) => sum + expense.amount, 0);
+                totalExpenses += totalForCategory;
+                return { ...item, value: totalForCategory };
+            });
+            setSeriesData(updatedSeriesData);
+            setExpenseList(expenses);
+            setTotalexpense(totalExpenses);
+            const balance = calculateBalance(totalExpenses);
+            setWalletBalance(balance);
+        } catch (error) {
+            console.error('Error fetching expenses:', error);
+        }
+    };
+
+    const calculateBalance = (totalExpenses) => {
+        return 0 - totalExpenses;
+    };
 
     const handleAddIncome = () => {
         const incomeValue = parseFloat(income);
         if (!isNaN(incomeValue) && incomeValue > 0) {
-            setWalletBalance(walletBalance + incomeValue);
+            const newBalance = walletBalance + incomeValue
+            setWalletBalance(newBalance);
+
+            
+
+            toast.success("Wallet Balance Credited!");
             setIncome('');
         }
     };
@@ -71,20 +124,38 @@ const ExpenseTracker = () => {
         setSelectedCategory('');
     };
 
-    const handleAddExpense = () => {
+    const handleAddExpense = async () => {
+
         const expenseValue = parseFloat(expense);
-        // setTotalexpense(prevExpense => prevExpense + parseInt(expenseValue));
-        if (!isNaN(expenseValue) && expenseValue > 0 && selectedCategory) {
-            setWalletBalance(walletBalance - expenseValue);
-            const newSeriesData = seriesData.map((item) => {
-                if (item.label === selectedCategory) {
-                    return { ...item, value: item.value + expenseValue };
-                }
-                return item;
-            });
-            setSeriesData(newSeriesData);
-            setExpenseList([...expenseList, { category: selectedCategory, amount: expenseValue, details: expenseDetails }]);
-            handleCloseModal();
+
+        if (!isNaN(expenseValue) && expenseValue > 0 && selectedCategory && walletBalance >= expenseValue) {
+            const newExpense = { userId: loggedinUser._id, category: selectedCategory, amount: expenseValue, details: expenseDetails };
+
+            try {
+                const response = await axios.post('api/users/financetracker', newExpense);
+                setWalletBalance(walletBalance - expenseValue);
+                setTotalexpense((prevTotal) => Number(prevTotal) + expenseValue);
+                const newSeriesData = seriesData.map((item) => {
+                    if (item.label === selectedCategory) {
+                        return { ...item, value: item.value + expenseValue };
+                    }
+                    return item;
+                });
+                setSeriesData(newSeriesData);
+                setExpenseList([...expenseList, response.data]);
+
+                handleCloseModal();
+                toast.info("New Expense Added!");
+            } catch (error) {
+                console.error('Error adding expense:', error);
+                toast.error("Something Went Wrong!");
+            }
+        } else {
+            if (walletBalance < expenseValue) {
+                toast.warning("Insufficient Wallet Balance!");
+            } else {
+                toast.error("Something Went Wrong!");
+            }
         }
     };
 
@@ -98,12 +169,13 @@ const ExpenseTracker = () => {
 
     const series = [
         {
-            data: seriesData,
+            data: seriesData.some(item => item.value > 0) ? seriesData : [{ id: 0, value: 1, label: 'No Expenses Yet' }],
         },
     ];
 
     return (
         <>
+            <Toaster richColors position='top-right' />
             <SideDrawer>
                 <ThemeProvider theme={theme}>
                     <Typography variant="h2">Expense Tracker</Typography>
@@ -113,7 +185,6 @@ const ExpenseTracker = () => {
                                 <Card>
                                     <CardHeader title="Wallet Balance" subheader={`${walletBalance} ₹`} />
                                     <CardContent>
-                                        {/* <Typography variant="body2">Your current wallet balance.</Typography> */}
                                         <Typography variant="body2">Your Total Expenses: {totalexpense}</Typography>
                                     </CardContent>
                                 </Card>
@@ -126,29 +197,36 @@ const ExpenseTracker = () => {
                                     />
                                     <Button variant="contained" onClick={handleAddIncome}>Add Income</Button>
                                     <Button variant="contained" onClick={handleOpenModal}>Add Expense</Button>
-                                    <PieChart
-                                        series={series}
-                                        slotProps={{
-                                            legend: {
-                                                direction: "row",
-                                                position: { vertical: 'top', horizontal: 'middle' },
-                                                padding: 50
-                                            }
-                                        }}
-                                        width={400}
-                                        height={550}
-                                    />
+                                    <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>
+                                        <PieChart
+                                            series={series}
+                                            slotProps={{
+                                                legend: {
+                                                    direction: "row",
+                                                    position: { vertical: 'top', horizontal: 'middle' },
+                                                    padding: 0,
+                                                }
+                                            }}
+                                            width={400}
+                                            height={400}
+                                        />
+                                    </Box>
                                 </Stack>
                             </Paper>
                             <Paper sx={{ p: 2, flex: 2, }}>
                                 <Paper sx={{ p: 2, flex: 2 }}>
                                     <Typography variant="h6">Category-wise Expenses</Typography>
                                     <Box sx={{ mt: 2 }}>
-                                        {getCategoryWiseExpenses().map((expense, index) => (
-                                            <Typography key={index} variant="body1">
-                                                {expense.category}: {expense.total} ₹
-                                            </Typography>
-                                        ))}
+                                        <List>
+                                            {getCategoryWiseExpenses().map((expense, index) => (
+                                                <ListItem key={index}>
+                                                    <ListItemIcon>{categoryIcons[expense.category]}</ListItemIcon>
+                                                    <ListItemText>
+                                                        {expense.category}: {expense.total} ₹
+                                                    </ListItemText>
+                                                </ListItem>
+                                            ))}
+                                        </List>
                                     </Box>
                                 </Paper>
                                 <Paper sx={{ p: 2, flex: 2, marginTop: 2 }}>
@@ -156,14 +234,34 @@ const ExpenseTracker = () => {
                                     <Box sx={{ mt: 2 }}>
                                         {expenseList.length > 0 ? (
                                             expenseList.map((expense, index) => (
-                                                <Box key={index} sx={{ mb: 2 }}>
-                                                    <Typography variant="body1">
-                                                        {expense.category}: {expense.amount} ₹
-                                                    </Typography>
-                                                    <Typography variant="body2">
-                                                        Details: {expense.details}
-                                                    </Typography>
-                                                </Box>
+                                                <List key={index} sx={{ width: '100%', maxWidth: 360, bgcolor: 'background.paper' }}>
+                                                    <ListItem alignItems="flex-start">
+                                                        <ListItemAvatar>
+                                                            <Avatar alt="Remy Sharp">
+                                                                {categoryIcons[expense.category]}
+                                                            </Avatar>
+                                                        </ListItemAvatar>
+                                                        <ListItemText
+                                                            primary={expense.details}
+                                                            secondary={
+                                                                <Box className="space-x-3">
+                                                                    <Typography
+                                                                        sx={{ display: 'inline' }}
+                                                                        component="span"
+                                                                        variant="body2"
+                                                                        color="text.primary"
+                                                                    >
+                                                                        {expense.amount} ₹
+                                                                    </Typography>
+
+                                                                    <Chip label={expense.category} variant='filled' size='small' />
+
+                                                                </Box>
+                                                            }
+                                                        />
+                                                    </ListItem>
+                                                    <Divider variant="inset" component="li" />
+                                                </List>
                                             ))
                                         ) : (
                                             <Typography variant="body1">No expenses at the moment.</Typography>
@@ -197,10 +295,10 @@ const ExpenseTracker = () => {
                                 onChange={(e) => setExpenseDetails(e.target.value)}
                             />
                             <Box sx={{ mt: 2 }}>
-                                <Button onClick={() => setSelectedCategory('Food')} variant={selectedCategory === 'Food' ? 'contained' : 'outlined'}>Food</Button>
-                                <Button onClick={() => setSelectedCategory('Entertainment')} variant={selectedCategory === 'Entertainment' ? 'contained' : 'outlined'}>Entertainment</Button>
-                                <Button onClick={() => setSelectedCategory('Traveling')} variant={selectedCategory === 'Traveling' ? 'contained' : 'outlined'}>Traveling</Button>
-                                <Button onClick={() => setSelectedCategory('Others')} variant={selectedCategory === 'Others' ? 'contained' : 'outlined'}>Others</Button>
+                                <Button startIcon={<RestaurantMenuIcon />} onClick={() => setSelectedCategory('Food')} variant={selectedCategory === 'Food' ? 'contained' : 'outlined'}>Food</Button>
+                                <Button startIcon={<MovieFilterIcon />} onClick={() => setSelectedCategory('Entertainment')} variant={selectedCategory === 'Entertainment' ? 'contained' : 'outlined'}>Entertainment</Button>
+                                <Button startIcon={<FlightIcon />} onClick={() => setSelectedCategory('Traveling')} variant={selectedCategory === 'Traveling' ? 'contained' : 'outlined'}>Traveling</Button>
+                                <Button startIcon={<MoreHorizIcon />} onClick={() => setSelectedCategory('Others')} variant={selectedCategory === 'Others' ? 'contained' : 'outlined'}>Others</Button>
                             </Box>
                         </DialogContent>
                         <DialogActions>

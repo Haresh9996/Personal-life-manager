@@ -116,7 +116,7 @@ function SideDrawer(props) {
                         <ListItemIcon>
                             <Avatar></Avatar>
                         </ListItemIcon>
-                        <ListItemText className='font-bold' primary={user ? user?.firstName.toUpperCase() : "Profile"} />
+                        <ListItemText className='font-bold' primary={user ? user?.firstName?.toUpperCase() : "Profile"} />
                     </ListItemButton>
                 </ListItem>
             </List>
