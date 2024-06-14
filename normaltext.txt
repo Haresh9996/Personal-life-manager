@@ -1,0 +1,29 @@
+const [FetchedUser, setFetchedUser] = useState({})
+
+useEffect(() => {
+        const user = JSON.parse(localStorage.getItem("plmUser"));
+        if (user && user._id) {
+            setLoggedinUser(user);
+            setWalletBalance(user?.ACbalance || 0)
+            fetchExpenses(user._id);
+            // fetchData(user._id)
+        }
+    }, []);
+    // console.log("wallet is", loggedinUser)
+
+    // useEffect(()=>{
+    // },[])
+
+    // const fetchData = async (id) => {
+    //     const data = await axios.get(`/api/users/${id}`)
+    //     const result = data.data.message
+    //     // console.log(result)
+    //     setFetchedUser(result)
+    // }
+
+    const setUser = (addedBalance) => {
+        const balance = { ...loggedinUser, ACbalance: addedBalance }
+        // const balance = { fetchedUser, ACbalance: addedBalance }
+        // const id = loggedinUser._id;
+        // const response = axios.put(`/api/users/${id}`, balance)
+    }

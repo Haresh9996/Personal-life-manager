@@ -9,6 +9,7 @@ import RestaurantMenuIcon from '@mui/icons-material/RestaurantMenu';
 import FlightIcon from '@mui/icons-material/Flight';
 import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
 import { Toaster, toast } from 'sonner';
+import { Balance } from '@mui/icons-material';
 
 const theme = createTheme({
     palette: {
@@ -70,9 +71,16 @@ const ExpenseTracker = () => {
         const user = JSON.parse(localStorage.getItem("plmUser"));
         if (user && user._id) {
             setLoggedinUser(user);
+            setWalletBalance(user?.ACbalance || 0)
             fetchExpenses(user._id);
         }
     }, []);
+    console.log("wallet is", loggedinUser)
+
+    const setUser = (addedBalance) => {
+        const balance = { ...loggedinUser, ACbalance: addedBalance }
+        localStorage.setItem("plmUser", JSON.stringify(balance))
+    }
 
     const fetchExpenses = async (userId) => {
         try {
@@ -89,25 +97,23 @@ const ExpenseTracker = () => {
             setSeriesData(updatedSeriesData);
             setExpenseList(expenses);
             setTotalexpense(totalExpenses);
-            const balance = calculateBalance(totalExpenses);
-            setWalletBalance(balance);
+            // const balance = calculateBalance(totalExpenses);
+            // setWalletBalance(balance);
         } catch (error) {
             console.error('Error fetching expenses:', error);
         }
     };
 
-    const calculateBalance = (totalExpenses) => {
-        return 0 - totalExpenses;
-    };
+    // const calculateBalance = (totalExpenses) => {
+    //     return 0 - totalExpenses;
+    // };
 
     const handleAddIncome = () => {
         const incomeValue = parseFloat(income);
         if (!isNaN(incomeValue) && incomeValue > 0) {
             const newBalance = walletBalance + incomeValue
             setWalletBalance(newBalance);
-
-            
-
+            setUser(newBalance)
             toast.success("Wallet Balance Credited!");
             setIncome('');
         }
@@ -133,7 +139,9 @@ const ExpenseTracker = () => {
 
             try {
                 const response = await axios.post('api/users/financetracker', newExpense);
-                setWalletBalance(walletBalance - expenseValue);
+                const newBalance = walletBalance - expenseValue
+                setWalletBalance(newBalance)
+                setUser(newBalance)
                 setTotalexpense((prevTotal) => Number(prevTotal) + expenseValue);
                 const newSeriesData = seriesData.map((item) => {
                     if (item.label === selectedCategory) {
