@@ -4,10 +4,11 @@ import dayjs from 'dayjs';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { DateCalendar } from '@mui/x-date-pickers/DateCalendar';
-import { Modal, Box, TextField, Button, Typography, List, ListItem, ListItemText, Paper, Divider } from '@mui/material';
+import { Modal, Box, TextField, Button, Typography, List, ListItem, ListItemText, Paper, Divider, IconButton } from '@mui/material';
 import SideDrawer from "../_components/SideDrawer";
 import { useEffect, useState } from 'react';
 import { Toaster, toast } from 'sonner';
+import { Delete, Edit } from '@mui/icons-material';
 
 export default function CalendarPage() {
     const [selectedDate, setSelectedDate] = useState(null);
@@ -118,12 +119,27 @@ export default function CalendarPage() {
                         </Paper>
                         <Paper sx={{ p: 2, flex: 2 }}>
                             <Typography variant="h6">Events</Typography>
+
                             {Object.keys(events).map((date, index) => (
                                 <div key={index}>
                                     <Typography variant="subtitle1">{date}</Typography>
                                     <List>
                                         {events[date].map((event, idx) => (
-                                            <ListItem key={idx}>
+                                            <ListItem key={idx}
+                                                secondaryAction={
+                                                    <>
+                                                        <IconButton edge="end" aria-label="edit"
+                                                        // onClick={() => handleEditEvent(date, idx)}
+                                                        >
+                                                            <Edit />
+                                                        </IconButton>
+                                                        <IconButton edge="end" aria-label="delete"
+                                                        // onClick={() => handleDeleteEvent(date, idx)}
+                                                        >
+                                                            <Delete />
+                                                        </IconButton>
+                                                    </>
+                                                }>
                                                 <ListItemText primary={event} />
                                             </ListItem>
                                         ))}
@@ -131,6 +147,7 @@ export default function CalendarPage() {
                                     <Divider />
                                 </div>
                             ))}
+
                         </Paper>
                     </Box>
                 </LocalizationProvider>
