@@ -14,7 +14,7 @@ export default function Page({ params }) {
         if (albumId) {
             const fetchAlbum = async () => {
                 try {
-                    const response = await fetch(`https://qtify-backend-labs.crio.do/albums/top`);
+                    const response = await fetch(`https://qtify-backend-labs.crio.do/albums/new`);
                     if (!response.ok) throw new Error("Failed to fetch album");
                     const result = await response.json();
                     const finalResult = result.filter(item => item.id === albumId);

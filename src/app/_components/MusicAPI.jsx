@@ -76,7 +76,7 @@ export default function MusicAPI() {
             <Grid container spacing={2}>
                 {paginatedNewAlbums.map((album) => (
                     <Grid item key={album.id} xs={12} sm={6} md={3}>
-                        <Link href={`/spiritual/${album.id}`} passHref>
+                        <Link href={`/spiritual/new/${album.id}`} passHref>
                             {/* <a style={{ textDecoration: 'none' }}> */}
                                 <Album album={album} />
                             {/* </a> */}
