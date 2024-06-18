@@ -66,21 +66,41 @@ const ExpenseTracker = () => {
     const [expenseList, setExpenseList] = useState([]);
     const [totalexpense, setTotalexpense] = useState('');
     const [loggedinUser, setLoggedinUser] = useState({});
+    const [FetchedUser, setFetchedUser] = useState({})
 
     useEffect(() => {
         const user = JSON.parse(localStorage.getItem("plmUser"));
         if (user && user._id) {
             setLoggedinUser(user);
-            setWalletBalance(user?.ACbalance || 0)
             fetchExpenses(user._id);
+            fetchData(user._id)
         }
     }, []);
-    console.log("wallet is", loggedinUser)
+
+    useEffect(() => {
+        setWalletBalance(FetchedUser?.ACbalance || 0)
+    }, [FetchedUser])
+
+    const fetchData = async (id) => {
+        const data = await axios.get(`/api/users/${id}`)
+        const result = data.data.message
+        setFetchedUser(result)
+        try {
+            const { data } = await axios.get(`/api/users/${id}`);
+            const result = data.data.message;
+            setFetchedUser(result);
+        } catch (error) {
+            console.error('Error fetching user data:', error);
+        }
+    }
 
     const setUser = (addedBalance) => {
-        const balance = { ...loggedinUser, ACbalance: addedBalance }
-        localStorage.setItem("plmUser", JSON.stringify(balance))
+        // const balance = { ...loggedinUser, ACbalance: addedBalance }
+        const balance = { FetchedUser, ACbalance: addedBalance }
+        const id = loggedinUser._id;
+        const response = axios.put(`/api/users/${id}`, balance)
     }
+
 
     const fetchExpenses = async (userId) => {
         try {
@@ -103,10 +123,6 @@ const ExpenseTracker = () => {
             console.error('Error fetching expenses:', error);
         }
     };
-
-    // const calculateBalance = (totalExpenses) => {
-    //     return 0 - totalExpenses;
-    // };
 
     const handleAddIncome = () => {
         const incomeValue = parseFloat(income);
