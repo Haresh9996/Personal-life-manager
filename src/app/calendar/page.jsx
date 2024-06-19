@@ -15,6 +15,7 @@ export default function CalendarPage() {
     const [events, setEvents] = useState({});
     const [newEvent, setNewEvent] = useState('');
     const [open, setOpen] = useState(false);
+    console.log("events", events)
 
     useEffect(() => {
         const fetchUserEvents = async () => {
@@ -28,7 +29,6 @@ export default function CalendarPage() {
                 const response = await fetch(`/api/users/calendar?userId=${user._id}`);
                 const data = await response.json();
                 if (data.success) {
-                    // Group events by date
                     const eventsByDate = data.message.reduce((acc, event) => {
                         const dateKey = event.date;
                         if (!acc[dateKey]) {
@@ -60,6 +60,11 @@ export default function CalendarPage() {
     const handleClose = () => {
         setOpen(false);
     };
+
+    const handleDeleteEvent = async (date, id) => {
+        // const data = await fetch("api/users/calendar"+ date)
+        console.log(date, id)
+    }
 
     const handleAddEvent = async () => {
         if (newEvent.trim() !== '') {
@@ -131,12 +136,12 @@ export default function CalendarPage() {
                                                         <IconButton edge="end" aria-label="edit"
                                                         // onClick={() => handleEditEvent(date, idx)}
                                                         >
-                                                            <Edit />
+                                                            <Edit color='primary' />
                                                         </IconButton>
                                                         <IconButton edge="end" aria-label="delete"
-                                                        // onClick={() => handleDeleteEvent(date, idx)}
+                                                            onClick={() => handleDeleteEvent(date, idx)}
                                                         >
-                                                            <Delete />
+                                                            <Delete color='error' />
                                                         </IconButton>
                                                     </>
                                                 }>
