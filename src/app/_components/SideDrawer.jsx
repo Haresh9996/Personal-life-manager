@@ -111,7 +111,7 @@ function SideDrawer(props) {
             </Toolbar>
             <Divider />
             <List>
-                <ListItem disablePadding>
+                <ListItem disablePadding onClick={() => router.push("/profile")} className={pathName == "/profile" ? "bg-white dark:bg-gray-900 text-gray-900 dark:text-white" : ""}>
                     <ListItemButton>
                         <ListItemIcon>
                             <Avatar></Avatar>
@@ -211,7 +211,7 @@ function SideDrawer(props) {
                         open={Boolean(profileMenuAnchorEl)}
                         onClose={handleProfileMenuClose}
                     >
-                        <MenuItem onClick={handleProfileMenuClose}>Profile</MenuItem>
+                        <MenuItem onClick={() => router.push("/profile")}>Profile</MenuItem>
                         <MenuItem onClick={handleLogout}>Logout</MenuItem>
                     </Menu>
                 </Toolbar>

@@ -3,10 +3,12 @@ import { database } from "@/app/utils/connection";
 import mongoose from "mongoose";
 import { NextResponse } from "next/server";
 
-export async function GET() {
+export async function GET(request, response) {
+    const { searchParams } = new URL(request?.url);
+    const userId = searchParams.get("userId")
     try {
         await mongoose.connect(database)
-        const data = await userSchema.find()
+        const data = await userSchema.find({ _id: userId })
         return NextResponse.json({ message: data, success: true })
 
     } catch (error) {
