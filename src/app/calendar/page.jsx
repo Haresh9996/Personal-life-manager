@@ -184,7 +184,7 @@ export default function CalendarPage() {
                     setNewEvent('');
                     handleClose();
                     toast.success('Event added successfully');
-                    fetchUserEvents(); 
+                    fetchUserEvents();
                 } else {
                     console.error('Failed to add event:', data.message);
                 }
@@ -197,7 +197,11 @@ export default function CalendarPage() {
     return (
         <>
             <SideDrawer>
-                <h2>Calendar</h2>
+                <Box mb={4}>
+                    <Typography variant="h3" component="h1" align="left" gutterBottom>
+                        Event Scheduler
+                    </Typography>
+                </Box>
                 <LocalizationProvider dateAdapter={AdapterDayjs}>
                     <Box sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'start', flexDirection: 'row', gap: 2 }}>
                         <Paper sx={{ p: 2, flex: 1 }}>

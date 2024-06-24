@@ -102,7 +102,7 @@ const ExpenseTracker = () => {
         // const balance = { ...loggedinUser, ACbalance: addedBalance }
         const balance = { FetchedUser, ACbalance: addedBalance }
         const id = loggedinUser._id;
-        const response = axios.put(`/api/users/${id}`, balance)
+        axios.put(`/api/users/${id}`, balance)
     }
 
     const fetchExpenses = async (userId) => {
